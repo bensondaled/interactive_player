@@ -74,11 +74,6 @@ class MoviePlayer(tk.Frame):
         self.ended = True
         self.root.quit()
 
-
-
-
-
-
 class Data():
     def __init__(self):
         self.shape = [3000,512,512]
@@ -87,3 +82,7 @@ class Data():
         minn,maxx = frame.min(),frame.max()
         frame = (255*((frame-minn)/(maxx-minn))).astype(np.uint8)
         return frame
+
+if __name__ == '__main__':
+    data = Data()
+    mp = MoviePlayer(data, Ts=1/30)

@@ -6,18 +6,18 @@ import matplotlib.gridspec as gridspec
 import time
 
 class Interface(animation.TimedAnimation):
-    def __init__(self, mov, **kwargs):
+    def __init__(self, data, **kwargs):
 
-        self.mov = mov
+        self.data = data
 
         # figure setup
         self.fig = pl.figure()
         self.ax_mov = self.fig.add_axes([.3,.3,.4,.5])
         self.ax_nav = self.fig.add_axes([.3,.2,.4,.1])
-        self.ax_nav.set_xlim([0, len(self.mov)])
+        self.ax_nav.set_xlim([0, self.data.size])
         self.ax_nav.axis('off')
 
-        self.movdata = self.ax_mov.imshow(self.mov[0], vmin=0, vmax=1)
+        self.movdata = self.ax_mov.imshow(self.data.get_frame(0), vmin=0, vmax=1)
         self.movdata.set_animated(True)
         self.navdata, = self.ax_nav.plot([-2,-2],[-1,1], 'r-')
 
@@ -25,7 +25,6 @@ class Interface(animation.TimedAnimation):
 
         # runtime
         self._idx = -1
-        self.t0 = time.clock()
         self.always_draw = [self.movdata, self.navdata]
         self.blit_clear_axes = [self.ax_mov, self.ax_nav]
 
@@ -35,26 +34,23 @@ class Interface(animation.TimedAnimation):
     @property
     def frame_seq(self):
         self._idx += 1
-        if self._idx == len(self.mov):
+        if self._idx == self.data.size:
             self._idx = 0
         self.navdata.set_xdata([self._idx, self._idx])
-        yield self.mov[self._idx]
+        yield self.data.get_frame(self._idx)
 
     @frame_seq.setter
     def frame_seq(self, val):
         pass
 
     def new_frame_seq(self):
-        return self.mov
-
+        return self.data
 
     def _init_draw(self):
-        self._draw_frame(self.mov[0])
+        self._draw_frame(self.data.get_frame(0))
         self._drawn_artists = self.always_draw
 
     def _draw_frame(self, d):
-        self.t0 = time.clock()
-
         self.movdata.set_data(d)
         
         # blit
@@ -74,10 +70,15 @@ class Interface(animation.TimedAnimation):
         elif evt.inaxes in [self.ax_nav]:
             x = int(np.round(evt.xdata))
             self._idx = x
-    
+
+# placeholder for a complete data handling class
+class Data():
+    def __init__(self):
+        self.size = 30
+    def get_frame(self, i):
+        i = i/self.size
+        return np.clip(np.random.normal(i,.1,size=[512,512]),0,1)
 
 if __name__ == '__main__':
-    # load data
-    mov = np.array([np.clip(np.random.normal(i,.1,size=[512,512]),0,1) for i in np.linspace(0,1,100)])
-    # run interface
-    intfc = Interface(mov)
+    data = Data()
+    intfc = Interface(data)
